@@ -1634,3 +1634,35 @@ class TikTokApi:
         for x in self.get_data(url=api_url, **kwargs)["body"][1]["exploreList"]:
             res.append(x["cardItem"])
         return res[:count]
+    
+    def get_suggested_users_by_id(
+        self, userId="6745191554350760966", count=30, **kwargs
+    ) -> list:
+        """Returns suggested users given a different TikTok user.
+        ##### Parameters
+        * userId: The id of the user to get suggestions for
+        * count: The amount of users to return, optional
+        """
+        (
+            region,
+            language,
+            proxy,
+            maxCount,
+            device_id,
+        ) = self.__process_kwargs__(kwargs)
+        kwargs["custom_device_id"] = device_id
+        query = {
+            "noUser": 0,
+            "pageId": userId,
+            "userId": userId,
+            "userCount": count,
+            "scene": 15,
+        }
+        api_url = "{}node/share/discover?{}&{}".format(
+            BASE_URL, self.__add_url_params__(), urlencode(query)
+        )
+        res = []
+        for x in self.get_data(url=api_url, **kwargs)["body"][0]["exploreList"]:
+            res.append(x["cardItem"])
+        return res[:count]
+

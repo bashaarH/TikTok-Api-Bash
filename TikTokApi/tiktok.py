@@ -1572,3 +1572,65 @@ class TikTokApi:
             else:
                 device_id = "".join(random.choice(string.digits) for num in range(19))
         return region, language, proxy, maxCount, device_id
+
+    def get_suggested_users_by_id_crawler(
+        self, count=30, startingId="6745191554350760966", **kwargs
+    ) -> list:
+        """Crawls for listing of all user objects it can find.
+        ##### Parameters
+        * count: The amount of users to crawl for
+        * startingId: The ID of a TikTok user to start at, optional
+            Optional but uses a static one to start, so you may get more
+            unique results with setting your own.
+        """
+        (
+            region,
+            language,
+            proxy,
+            maxCount,
+            device_id,
+        ) = self.__process_kwargs__(kwargs)
+        kwargs["custom_device_id"] = device_id
+        users = []
+        unusedevice_idS = [startingId]
+        while len(users) < count:
+            userId = random.choice(unusedevice_idS)
+            newUsers = self.get_suggested_users_by_id(userId=userId, **kwargs)
+            unusedevice_idS.remove(userId)
+
+            for user in newUsers:
+                if user not in users:
+                    users.append(user)
+                    unusedevice_idS.append(user["id"])
+
+        return users[:count]
+
+    def get_suggested_hashtags_by_id(
+        self, count=30, userId="6745191554350760966", **kwargs
+    ) -> list:
+        """Returns suggested hashtags given a TikTok user.
+        ##### Parameters
+        * userId: The id of the user to get suggestions for
+        """
+        (
+            region,
+            language,
+            proxy,
+            maxCount,
+            device_id,
+        ) = self.__process_kwargs__(kwargs)
+        kwargs["custom_device_id"] = device_id
+        query = {
+            "noUser": 0,
+            "pageId": userId,
+            "userId": userId,
+            "userCount": count,
+            "scene": 15,
+        }
+        api_url = "{}node/share/discover?{}&{}".format(
+            BASE_URL, self.__add_url_params__(), urlencode(query)
+        )
+        res = []
+        for x in self.get_data(url=api_url, **kwargs)["body"][1]["exploreList"]:
+            res.append(x["cardItem"])
+        return res[:count]
